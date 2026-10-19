@@ -32,3 +32,17 @@
 - Establish expanding-window walk-forward validation.
 - Implement and compare the naive baseline, Logistic Regression, XGBoost, and LSTM models.
 - Evaluate predictive performance and trading-strategy performance, accounting for transaction costs and slippage.
+
+## 19 October 2026 — Exploratory Analysis and Baseline
+
+### Descriptive analysis
+
+- Summarised the SPY and QQQ research datasets, including closing prices, next-five-minute returns, and trading volume.
+- Checked the direction of the next-five-minute returns. The up and down classes were close to evenly balanced for both ETFs.
+- Added charts to examine return distributions and how typical returns and trading volume vary during the trading day.
+
+### Majority-class baseline
+
+- Created a simple baseline that predicts the most common direction in the training data.
+- Used earlier trading days for training and later days for testing.
+- The baseline accuracy was about 50% for both ETFs. This provides a reference point for comparing future models.
