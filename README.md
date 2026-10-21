@@ -13,7 +13,7 @@ Can selected machine learning models predict the next five-minute price directio
 - SPY: S&P 500 ETF
 - QQQ: Nasdaq-100 ETF
 - Frequency: Five-minute OHLCV data
-- Historical period: To be determined after data availability checks
+- Historical period: 7 March 2022 to 16 October 2026 in the current source files
 
 ## Models
 
@@ -53,4 +53,4 @@ Financial metrics:
 
 ## Project Status
 
-Currently setting up the research environment and verifying historical data availability.
+Data preparation, leakage-aware feature engineering, five-fold expanding-window model comparisons, an initial long-or-cash cost-sensitivity backtest, and a matched technical-indicator ablation are complete. The indicator set did not consistently improve predictive metrics, and the strategy remains highly sensitive to costs. Remaining analysis work includes reviewing execution assumptions and running robustness checks.
