@@ -57,8 +57,8 @@ Financial metrics:
 
 Use Python 3.13 and install the packages in `requirements.txt`. Keep the cleaned input files `QQQ_clean_5min.parquet` and `SPY_clean_5min.parquet` in `data/`; they are not included in Git. See `data/README.md` for the data note.
 
-From the project root, run `python python_code/run_advanced_models.py`, then `python python_code/run_backtest.py`, and `python python_code/run_indicator_ablation.py`. The model runner keeps XGBoost and PyTorch work in a separate process from notebook kernels.
+From the project root, run `python python_code/run_advanced_models.py`, then `python python_code/run_backtest.py`, `python python_code/run_indicator_ablation.py`, and `python python_code/run_robustness_checks.py`. The model runner keeps XGBoost and PyTorch work in a separate process from notebook kernels.
 
 ## Project Status
 
-The analysis now uses a next-bar-open entry assumption: after the current five-minute bar closes, each signal is evaluated on the following bar's open-to-close direction. It compares the training-majority baseline, direction-persistence baseline, Logistic Regression, XGBoost and LSTM. The refreshed backtest remains highly sensitive to the illustrative per-side cost scenarios. Robustness checks, a final business interpretation, and the report remain to be completed.
+The analysis now uses a next-bar-open entry assumption: after the current five-minute bar closes, each signal is evaluated on the following bar's open-to-close direction. It compares the training-majority baseline, direction-persistence baseline, Logistic Regression, XGBoost and LSTM. The refreshed backtest remains highly sensitive to the illustrative per-side cost scenarios. Fold-by-fold robustness outputs are available in `results/robustness_*.csv` and reviewed in `notebooks/07_robustness_checks.ipynb`. These are stability checks on folds already used for model review, not an untouched final test. A final business interpretation and the student-written report remain to be completed.

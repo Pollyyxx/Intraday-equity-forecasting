@@ -11,7 +11,8 @@ Reusable Python code for the thesis project.
 - `backtesting.py`: next-bar-open long-or-cash returns, explicit signal/entry/exit times, position turnover, forced session/gap exits, and per-side cost sensitivity.
 - `run_backtest.py`: validates saved predictions and runs the backtest without importing the model-training libraries.
 - `run_indicator_ablation.py`: compares base predictors with a fixed set of technical indicators on identical rows and folds, checks future-data invariance, and saves matched prediction and cost-sensitivity outputs.
+- `run_robustness_checks.py`: validates fold coverage and saves predictive metrics and flat-start/flat-end strategy results by fold, plus fold-to-fold return ranges.
 
 ## Planned components
 
-- Backtest robustness checks and final methodological review
+- Final methodological review and business interpretation

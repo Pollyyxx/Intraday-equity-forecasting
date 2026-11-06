@@ -8,7 +8,8 @@
 - `04_xgboost_lstm.ipynb`: fixed-settings comparison of two simple baselines, Logistic Regression, XGBoost and LSTM; it reads saved results and isolates model fitting in a separate process when results need to be generated.
 - `05_long_or_cash_backtest.ipynb`: saved out-of-sample long-or-cash performance using next-bar-open entries and open-to-close returns, with per-side cost sensitivity.
 - `06_indicator_ablation.ipynb`: paired comparison of the base predictors with MACD, RSI, Bollinger bandwidth, and session VWAP distance, including matched cost-sensitivity results.
+- `07_robustness_checks.ipynb`: fold-by-fold predictive and strategy stability review using the existing out-of-sample predictions.
 
 ## Planned notebooks
 
-- Review and robustness checks for the trading-strategy evaluation
+- None currently. The independent final-period evaluation, if required, must use data collected after the modelling choices are fixed.

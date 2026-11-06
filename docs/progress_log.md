@@ -87,3 +87,11 @@
 - Review cost inputs against available spread, fee and execution information; otherwise retain them as explicitly illustrative scenarios.
 - Complete robustness analysis, business interpretation and recommendations, visuals, and the student-written report.
 - Add or maintain the comprehensive AI coding interaction record and disclosure required by the Handbook.
+
+## 6 November 2026 — Fold-by-fold robustness review
+
+- Added `python_code/run_robustness_checks.py` to assign each saved prediction to its chronological test fold, verify each prediction is assigned once, and confirm assigned row counts match the saved fold sizes.
+- Re-ran the existing long-or-cash calculation separately within each fold. Each fold portfolio starts flat and closes any final position at the fold boundary; fold returns are compared as separate periods and are not compounded together.
+- Saved fold predictive metrics, fold backtest summaries, daily fold returns, and return-range summaries under `results/robustness_*.csv`. Added `notebooks/07_robustness_checks.ipynb` for reviewing those tables and plotting XGBoost fold returns.
+- All 46,951 predictions mapped to one fold, and row counts matched the saved fold definitions. XGBoost was positive in all five zero-cost folds for QQQ (range +5.74% to +7.57%) and SPY (range +0.58% to +9.07%). At the illustrative 1 bp per-side scenario, no XGBoost fold was positive; mean fold returns were -13.67% for QQQ and -15.25% for SPY. Costs are scenario assumptions, and these reused folds are not an independent final test.
+- The fold-by-fold method pays to close a position at each fold boundary, so these fold-level returns are intentionally not directly compounded to reproduce the continuous-period backtest summary.
