@@ -141,3 +141,10 @@ These tasks were written before the target and execution timing were corrected. 
 - Confirmed the backtest applies a basis-point cost at position entry and exit. The zero-cost row is a gross reference; the 1, 2.5, 5 and 10 bp-per-side rows remain sensitivity assumptions.
 - Reviewed the SEC Section 31 fee explanation and FY2026 rate advisory, FINRA's TAF guidance for ETFs, and the SEC Rule 605 execution-quality material. Those sources show that fees vary by date and transaction context, while spread and execution quality require quote/order information absent from these inputs.
 - Kept the cost grid unchanged and documented what evidence would be needed to calibrate it. No claim is made that any scenario matches a specific broker or venue.
+
+
+## 6 November 2026 — Results interpretation evidence map
+
+- Compiled saved predictive metrics, continuous-period strategy results, fold-level stability and the matched indicator deltas in `docs/results_interpretation_guide.md`.
+- Recorded the key evaluation boundaries: five reviewed chronological folds, separate fold portfolios versus the continuous backtest, and illustrative transaction-cost scenarios.
+- Added figure pointers and questions for the student's own business interpretation; the guide is not dissertation prose.

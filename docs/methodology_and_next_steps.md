@@ -37,12 +37,14 @@ The cleaned input files contain `datetime`, OHLCV and a source label. They do no
 The official fee rules provide context but do not calibrate those all-in scenarios. The SEC FY2026 advisory sets a rate of $20.60 per million dollars for covered sales from 4 April 2026; Section 31 rates can change, and the SEC explains that SROs pay the SEC while broker-dealer pass-through charges depend on SRO and firm procedures. FINRA guidance says ETFs are covered by its transaction-based member fee, with details in its schedule. These date- and transaction-specific charges do not measure spread or slippage and cannot be applied as one uniform customer cost across the full 2022–2026 sample. See the [SEC FY2026 fee advisory](https://www.sec.gov/rules-regulations/fee-rate-advisories/2026-2), [SEC Section 31 fee explanation](https://www.sec.gov/rules-regulations/fee-rate-advisories/section-31-transaction-fees-basic-information-firms), and [FINRA Trading Activity Fee FAQ](https://www.finra.org/rules-guidance/guidance/faqs/trading-activity-fee).
 
 Decision: leave the current cost grid unchanged and label every non-zero rate illustrative. A calibrated execution-cost estimate would need timestamped quote data near each order, an order-size assumption, a specified venue or routing rule, and the relevant broker fee schedule. Quote-based execution measures such as effective spread use quote benchmarks around order receipt; see the [SEC Rule 605 execution-quality FAQ](https://www.sec.gov/rules-regulations/staff-guidance/trading-markets-frequently-asked-questions/frequently-asked-questions-rule-605-regulation-nms).
-## Next analysis tasks
 
-1. Review model accuracy and AUC alongside the majority and persistence baselines, not in isolation.
-2. Compare fold-to-fold variation in returns, maximum drawdown, Sharpe, entries and turnover.
-3. Explain how transaction-cost assumptions change the result and identify what evidence would be needed for a realistic cost estimate.
-4. Turn the findings into a cautious business recommendation and note the limitations of IEX coverage, missing bars, the bar-level execution assumption and the absence of later data.
-5. Confirm the final model and strategy scope before the student writes the report.
+## Remaining work after the evidence review
+
+1. Confirm that the current scope is final: SPY and QQQ at five-minute frequency, two simple baselines, Logistic Regression, XGBoost and LSTM, with the indicator experiment kept secondary.
+2. The student writes the report in their own words, using the evidence map to connect predictive results, trading outcomes, business context and limitations. Select only the figures needed to support those points.
+3. Confirm how the examiner can access or understand the licensed input data; the cleaned Parquet files are not in Git.
+4. Keep the separate project activity record and complete the required submission declarations.
+
+Saved output values and interpretation prompts are collected in [the results evidence map](results_interpretation_guide.md).
 
 These are working notes to support the analysis, not dissertation text.
