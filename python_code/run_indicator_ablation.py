@@ -74,10 +74,11 @@ def main() -> None:
     for ticker, raw in source_frames.items():
         bars = select_scheduled_bars(raw, schedule)
         assert_future_invariance(bars)
+        # Build both feature sets from the same session-filtered bars.
         base = build_model_frame(bars)
         enriched = add_technical_indicators(base)
 
-        # Exclude warm-up rows from BOTH feature sets so folds and timestamps match.
+        # Remove warm-up rows from both feature sets so folds and timestamps match.
         common = enriched.dropna(
             subset=[*BASE_FEATURE_COLUMNS, *INDICATOR_FEATURE_COLUMNS, "target", "next_return"]
         ).copy()
@@ -126,6 +127,7 @@ def main() -> None:
         .mean()
         .reset_index()
     )
+    # Subtract base scores from indicator scores on the same matched sample.
     baseline = summary.loc[summary["feature_set"] == "Base features"].drop(
         columns="feature_set"
     )
@@ -156,6 +158,7 @@ def main() -> None:
     if summary.empty or delta.empty or bt_summary.empty:
         raise AssertionError("One or more ablation output tables are empty")
 
+    # Keep the paired predictions and all summary tables for later review.
     RESULTS.mkdir(parents=True, exist_ok=True)
     all_metrics.to_csv(RESULTS / "indicator_ablation_fold_metrics.csv", index=False)
     all_predictions.to_csv(RESULTS / "indicator_ablation_predictions.csv", index=False)

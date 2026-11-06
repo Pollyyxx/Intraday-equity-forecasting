@@ -15,16 +15,19 @@ COST_SCENARIOS_BPS_PER_SIDE = (0.0, 1.0, 2.5, 5.0, 10.0)
 
 
 def main() -> None:
+    # Reuse the saved out-of-sample forecasts; this script does not refit models.
     prediction_path = RESULTS_DIR / "advanced_model_predictions.csv"
     predictions = pd.read_csv(
         prediction_path,
         parse_dates=["datetime", "signal_datetime", "next_datetime", "entry_datetime", "exit_datetime"],
     )
+    # Apply the same trading rule to every model under each per-side cost case.
     summaries, daily_returns = backtest_long_or_cash(
         predictions,
         cost_bps_per_side=COST_SCENARIOS_BPS_PER_SIDE,
     )
 
+    # Catch missing model or cost rows before replacing the saved result files.
     expected_models = {
         "Majority baseline", "Direction persistence baseline",
         "Logistic regression", "XGBoost", "LSTM"

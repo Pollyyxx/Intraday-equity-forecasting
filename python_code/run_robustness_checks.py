@@ -25,6 +25,7 @@ def load_fold_assignments() -> tuple[pd.DataFrame, pd.DataFrame]:
     if windows.duplicated(["ETF", "fold"]).any():
         raise ValueError("Each ETF/fold must have one unique saved test window")
 
+    # Match each prediction date to one saved test window; ambiguous dates fail.
     assignments = []
     for ticker, ticker_rows in predictions.groupby("ETF", sort=True):
         ticker_windows = windows.loc[windows["ETF"].eq(ticker)].copy()
@@ -48,6 +49,7 @@ def load_fold_assignments() -> tuple[pd.DataFrame, pd.DataFrame]:
     assigned = pd.DataFrame(assignments, columns=["ETF", "datetime", "fold"])
     data = predictions.merge(assigned, on=["ETF", "datetime"], validate="one_to_one")
 
+    # Row counts must match the original fold definitions before backtesting.
     actual_counts = data.groupby(["ETF", "fold"]).size().rename("assigned_rows")
     expected_counts = windows.set_index(["ETF", "fold"])["test_rows"].astype(int)
     counts = actual_counts.to_frame().join(expected_counts.rename("expected_rows"), how="outer")
@@ -81,7 +83,7 @@ def main() -> None:
         RESULTS / "robustness_backtest_daily_by_fold.csv", index=False
     )
 
-    # These ranges show how much results vary from one validation period to another.
+    # Summarize the fold range; do not compound these separate fold portfolios.
     grouped = by_fold.groupby(["ETF", "model", "cost_bps_per_side"], sort=True)
     stability = grouped.agg(
         folds=("fold", "nunique"),

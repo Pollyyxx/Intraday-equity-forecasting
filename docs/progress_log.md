@@ -120,3 +120,10 @@ These tasks were written before the target and execution timing were corrected. 
 - The paired indicator results remain a separate matched-sample comparison. They are not directly compared with the full-sample model metrics.
 - Added a signal-to-execution comparison: XGBoost mean accuracy exceeded the majority baseline by 0.98 percentage points for QQQ and 1.33 points for SPY, while its 1 bp-per-side full-period returns were -52.05% and -56.39%. This frames the business question as whether a modest predictive lift survives the trading-cost assumption; it is an exploratory comparison, not a deployment claim.
 - Next: review fold consistency, drawdown, turnover and cost sensitivity, then confirm the final model/strategy scope and write the interpretation independently.
+
+
+## 6 November 2026 — Code comments and visual review
+
+- Added short comments across notebook code cells and reusable Python modules to explain the main data, validation, modelling and backtest steps.
+- Added plots for session completeness, target balance, fold accuracy, model score variation and matched indicator changes. Existing cost, robustness and signal-to-execution plots remain in their relevant notebooks.
+- Checked that all notebook outputs are error-free and all Python modules parse. The edits in this review are explanatory and visual, apart from correcting an outdated validation error message in the advanced-model runner.

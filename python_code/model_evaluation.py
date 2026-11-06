@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 
 def expanding_date_splits(dates, initial_train_fraction=0.60, n_splits=5):
     """Return expanding train-date sets and later, non-overlapping test blocks."""
+    # Sort unique dates so each whole session stays on one side of a split.
     ordered_dates = sorted(pd.unique(pd.Series(dates).dropna()))
     if not 0 < initial_train_fraction < 1:
         raise ValueError("initial_train_fraction must be between 0 and 1")
@@ -21,6 +22,8 @@ def expanding_date_splits(dates, initial_train_fraction=0.60, n_splits=5):
     if initial_count < 1 or len(ordered_dates) - initial_count < n_splits:
         raise ValueError("Not enough unique dates for the requested split settings")
 
+    # The first 60% of dates form the initial training window. Split the later
+    # dates into test blocks; each fold trains on all dates before its test block.
     remaining = ordered_dates[initial_count:]
     blocks = [block.tolist() for block in np.array_split(remaining, n_splits)]
     splits = []
@@ -50,6 +53,7 @@ def evaluate_expanding_window(
     data = frame.copy()
     data["datetime"] = pd.to_datetime(data["datetime"], errors="raise")
     data["session_date"] = data["datetime"].dt.date
+    # Rows without a complete input or valid next-bar label cannot be scored.
     eligible = data.dropna(subset=[*feature_columns, "target"]).copy()
     eligible["target"] = eligible["target"].astype(int)
     if not set(eligible["target"].unique()).issubset({0, 1}):
@@ -77,6 +81,8 @@ def evaluate_expanding_window(
         y_train = train["target"].astype(int)
         x_test = test[list(feature_columns)]
         y_test = test["target"].astype(int)
+        # The majority forecast uses training labels only; persistence instead
+        # carries the latest completed direction forward for each test row.
         majority_class = int(y_train.mode().iloc[0])
         baseline_prediction = np.full(len(test), majority_class, dtype=int)
         # This is a small time-series idea: use the last completed direction as
@@ -92,6 +98,7 @@ def evaluate_expanding_window(
         logistic_prediction = classifier.predict(x_test).astype(int)
         logistic_probability = classifier.predict_proba(x_test)[:, 1]
 
+        # Save fold boundaries with each score so results can be traced to dates.
         common = {
             "fold": fold,
             "train_rows": len(train),

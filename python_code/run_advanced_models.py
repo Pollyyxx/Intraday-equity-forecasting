@@ -20,14 +20,17 @@ RESULTS_DIR = PROJECT_ROOT / "results"
 
 def main() -> None:
     print(f"XGBoost {xgboost.__version__}; PyTorch {torch.__version__}", flush=True)
+    # Read the local cleaned inputs; these data files are intentionally not in Git.
     sources = {
         ticker: pd.read_parquet(DATA_DIR / f"{ticker}_clean_5min.parquet")
         for ticker in ("QQQ", "SPY")
     }
     start_date = min(frame["datetime"].min().date() for frame in sources.values())
     end_date = max(frame["datetime"].max().date() for frame in sources.values())
+    # Use the exchange calendar so early closes and holidays are handled correctly.
     schedule = mcal.get_calendar("NYSE").schedule(start_date=start_date, end_date=end_date)
 
+    # Keep model metrics and predictions together by ETF before writing results.
     metric_frames = []
     prediction_frames = []
     for ticker, source in sources.items():
@@ -61,7 +64,7 @@ def main() -> None:
     for ticker in ("QQQ", "SPY"):
         ticker_metrics = all_metrics.loc[all_metrics["ETF"] == ticker]
         if set(ticker_metrics["model"]) != required_models:
-            raise AssertionError(f"{ticker}: the expected four models were not evaluated")
+            raise AssertionError(f"{ticker}: the expected model and baseline set was not evaluated")
         if set(ticker_metrics["fold"]) != {1, 2, 3, 4, 5}:
             raise AssertionError(f"{ticker}: expected five chronological folds")
         ticker_predictions = all_predictions.loc[all_predictions["ETF"] == ticker]
@@ -70,6 +73,7 @@ def main() -> None:
         if ticker_predictions.isna().any().any():
             raise AssertionError(f"{ticker}: missing values in saved predictions")
 
+    # Save fold-level scores and shared predictions for the review notebooks.
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     all_metrics.to_csv(RESULTS_DIR / "advanced_model_fold_metrics.csv", index=False)
     all_predictions.to_csv(RESULTS_DIR / "advanced_model_predictions.csv", index=False)

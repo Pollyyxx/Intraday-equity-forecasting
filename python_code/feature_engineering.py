@@ -70,6 +70,7 @@ def select_scheduled_bars(
     if interval_minutes <= 0:
         raise ValueError("interval_minutes must be positive")
     data = _validated_bars(df)
+    # Build the expected local bar-start times from the actual exchange schedule.
     expected = set()
     for session_date, row in schedule.iterrows():
         market_open = row["market_open"].tz_convert("America/New_York").tz_localize(None)
@@ -79,6 +80,7 @@ def select_scheduled_bars(
             end=market_close - pd.Timedelta(minutes=interval_minutes),
             freq=f"{interval_minutes}min",
         ))
+    # Keep observed bars only; this filter never fills an absent timestamp.
     return data.loc[data["datetime"].isin(expected)].reset_index(drop=True)
 
 
@@ -92,6 +94,7 @@ def add_next_bar_target(df: pd.DataFrame) -> pd.DataFrame:
     next_datetime = data["datetime"].shift(-1)
     next_open = data["Open"].shift(-1)
     next_close = data["Close"].shift(-1)
+    # A target is valid only when the next row is the next five-minute bar today.
     same_date = data["datetime"].dt.date == next_datetime.dt.date
     consecutive = next_datetime.sub(data["datetime"]).eq(pd.Timedelta(minutes=5))
     valid = same_date & consecutive
@@ -133,6 +136,7 @@ def add_predictors(df: pd.DataFrame) -> pd.DataFrame:
     data["close_location_in_bar"] = (
         data["Close"].sub(data["Low"]).div(bar_range.where(bar_range.ne(0)))
     )
+    # Log scaling reduces the range of raw volume values while preserving order.
     data["log_volume"] = np.log1p(data["Volume"].astype(float))
     previous_log_volume = data.groupby("_session_date", sort=False)["log_volume"].shift(1)
     previous_datetime = data.groupby("_session_date", sort=False)["datetime"].shift(1)
@@ -168,6 +172,7 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     previous_datetime = data.groupby("_session_date", sort=False)["datetime"].shift(1)
     consecutive = data["datetime"].sub(previous_datetime).eq(pd.Timedelta(minutes=5))
     starts_segment = ~consecutive
+    # Restart rolling indicator history after overnight gaps and missing five-minute bars.
     data["_segment_id"] = starts_segment.groupby(data["_session_date"]).cumsum()
     segment_keys = ["_session_date", "_segment_id"]
     segments = data.groupby(segment_keys, sort=False)
@@ -185,6 +190,7 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     ).transform(
         lambda values: values.ewm(span=9, adjust=False, min_periods=9).mean()
     )
+    # Divide price-based indicators by close so their scale is comparable across ETFs.
     data["macd_line_pct"] = macd_line.div(data["Close"])
     data["macd_histogram_pct"] = macd_line.sub(macd_signal).div(data["Close"])
 

@@ -16,6 +16,7 @@ MODEL_PREDICTION_COLUMNS = {
 
 
 def _daily_returns(intervals: pd.DataFrame, return_column: str) -> pd.DataFrame:
+    # Compound five-minute returns within each session before summarizing days.
     return (
         intervals.groupby("session_date", sort=True)[return_column]
         .apply(lambda values: (1 + values).prod() - 1)
@@ -25,6 +26,7 @@ def _daily_returns(intervals: pd.DataFrame, return_column: str) -> pd.DataFrame:
 
 
 def _performance_summary(daily: pd.DataFrame) -> dict[str, float]:
+    # Risk and return metrics are calculated from the daily net strategy series.
     net = daily["net_return"].to_numpy(dtype=float)
     equity = np.cumprod(1 + net)
     running_peak = np.maximum.accumulate(np.r_[1.0, equity])[1:]
@@ -53,6 +55,7 @@ def backtest_long_or_cash(
     the next bar from open to close. Costs apply when positions change. A final
     position is closed after its target bar, including at session or data gaps.
     """
+    # Check the saved execution prices and timestamps before calculating returns.
     required = {
         "ETF", "datetime", "signal_datetime", "next_datetime",
         "entry_datetime", "exit_datetime", "next_open", "next_close",
@@ -116,6 +119,7 @@ def backtest_long_or_cash(
             next_position = ticker_data["next_datetime"].map(position_by_time)
             has_next_score = next_position.notna()
 
+            # A change in position costs one side; the final open position is closed.
             entry_turnover = (positions - preceding_position).abs()
             forced_exit_turnover = positions.where(~has_next_score, 0)
             turnover = entry_turnover + forced_exit_turnover

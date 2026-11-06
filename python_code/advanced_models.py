@@ -32,6 +32,7 @@ class _SequenceClassifier(nn.Module):
 
 def _make_sequences(frame, feature_columns, sequence_length):
     sequences, labels, timestamps = [], [], []
+    # Build each window inside one session; a missing bar breaks continuity.
     for _, day in frame.groupby("session_date", sort=True):
         day = day.sort_values("datetime")
         values = day[list(feature_columns)].to_numpy(dtype=np.float32)
@@ -79,6 +80,7 @@ def _fit_lstm(x_train, y_train, x_test, seed, epochs, batch_size=512):
     )
     model = _SequenceClassifier(input_size=x_train.shape[2])
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    # This loss expects raw scores; sigmoid is applied later for probabilities.
     loss_function = nn.BCEWithLogitsLoss()
     model.train()
     for _ in range(epochs):
@@ -116,6 +118,7 @@ def evaluate_xgb_lstm(
     data["session_date"] = data["datetime"].dt.date
     data = data.dropna(subset=[*feature_columns, "target"]).copy()
     data["target"] = data["target"].astype(int)
+    # Reuse the same chronological date blocks used by the simple models.
     splits = expanding_date_splits(
         data["session_date"].unique(),
         initial_train_fraction=initial_train_fraction,
@@ -131,7 +134,7 @@ def evaluate_xgb_lstm(
         if train["target"].nunique() < 2:
             raise ValueError(f"Fold {fold} training labels contain only one class")
 
-        # Fit all scaling parameters on training rows only.
+        # Learn scaling from past data only and apply the same transform to test rows.
         scaler = StandardScaler().fit(train[feature_columns])
         x_train_scaled = scaler.transform(train[feature_columns]).astype(np.float32)
         x_test_scaled = scaler.transform(test[feature_columns]).astype(np.float32)
@@ -149,6 +152,7 @@ def evaluate_xgb_lstm(
             raise ValueError(f"Fold {fold} has no complete LSTM test sequences")
 
         # All model metrics use the same test timestamps for a fair comparison.
+        # LSTM needs 12 complete bars, so compare every model on those same rows.
         common_timestamps = pd.to_datetime(test_timestamps)
         common_test = (
             test.loc[test["datetime"].isin(common_timestamps)]
@@ -165,13 +169,13 @@ def evaluate_xgb_lstm(
         # This benchmark carries the latest completed close-to-close direction forward.
         persistence_pred = (common_test["return_1_bar"].to_numpy() > 0).astype(int)
 
+        # Logistic regression uses the scaled inputs prepared from training data.
         logistic = LogisticRegression(max_iter=1000, solver="lbfgs")
         logistic.fit(x_train_scaled, y_train)
         logistic_pred = logistic.predict(common_test_scaled).astype(int)
         logistic_prob = logistic.predict_proba(common_test_scaled)[:, 1]
 
-        # These modest settings stay fixed; the test folds are for evaluation,
-        # not for searching for the best tree configuration.
+        # Trees use the original feature scale; keep settings fixed rather than tuning on test folds.
         xgb = XGBClassifier(
             n_estimators=200,
             max_depth=3,
@@ -189,6 +193,7 @@ def evaluate_xgb_lstm(
         xgb_prob = xgb.predict_proba(common_test[feature_columns])[:, 1]
 
         # The same fixed epoch count is used in each fold for a fair comparison.
+        # The recurrent model receives ordered 12-bar windows from the same fold.
         lstm_pred, lstm_prob = _fit_lstm(
             x_train_seq,
             y_train_seq,
@@ -206,6 +211,7 @@ def evaluate_xgb_lstm(
             ("XGBoost", xgb_pred, xgb_prob),
             ("LSTM", lstm_pred, lstm_prob),
         ]
+        # Save each model on the shared test rows; baselines have no probability score.
         for name, prediction, probability in fold_models:
             scores = _score(y_test, prediction, probability if probability is not None else np.full(len(y_test), majority_class, dtype=float))
             if name in {"Majority baseline", "Direction persistence baseline"}:
