@@ -71,3 +71,19 @@
 - Review execution-price assumptions and cost scenarios against the chosen data source and any available broker/venue information.
 - Run robustness checks on the strategy and performance metrics.
 - Record final methodological decisions and validate the complete analysis before writing dissertation text.
+
+
+## 6 November 2026 — Execution timing and time-series benchmark review
+
+- Replaced the earlier close-to-close target with the next five-minute bar's open-to-close return. Predictors are available at the current bar close; the simulated position enters at the next bar open and exits at that bar's close. Saved signal, entry and exit timestamps and added checks that the timestamps and return prices agree.
+- Added a direction-persistence benchmark that carries the latest completed close-to-close direction forward. Kept the training-majority baseline as a separate benchmark.
+- Re-ran the five-fold model comparison for both ETFs. On the full shared comparison, XGBoost mean accuracy / ROC-AUC was 0.5153 / 0.5230 for QQQ and 0.5175 / 0.5283 for SPY. Direction persistence was below 50% accuracy for both ETFs.
+- Re-ran the matched indicator ablation. On its smaller warm-up-complete sample, indicators did not improve XGBoost results consistently; this result is only compared within the matched ablation sample.
+- Re-ran the long-or-cash backtest. XGBoost zero-cost cumulative return was 37.18% for QQQ and 27.70% for SPY; at the illustrative 1 bp per-side case it was -52.05% and -56.39%. These are sensitivity results under a bar-level execution assumption, not verified broker costs or live-trading evidence.
+- The earlier close-to-close backtest outputs in the Git history are superseded by the current outputs.
+
+### Remaining work after this review
+- Freeze target, features, models and strategy settings before any final performance evaluation. The existing folds have already been inspected, so do not describe them as a brand-new untouched holdout. If an independent final period is required, collect later data after the method is fixed or clearly explain this limitation.
+- Review cost inputs against available spread, fee and execution information; otherwise retain them as explicitly illustrative scenarios.
+- Complete robustness analysis, business interpretation and recommendations, visuals, and the student-written report.
+- Add or maintain the comprehensive AI coding interaction record and disclosure required by the Handbook.

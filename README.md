@@ -6,7 +6,7 @@ This project investigates whether machine learning models can predict short-term
 
 ## Research Question
 
-Can selected machine learning models predict the next five-minute price direction of SPY and QQQ, and do their predictions generate better trading performance after transaction costs and slippage?
+Can selected models predict the next five-minute bar’s open-to-close direction for SPY and QQQ, and can those predictions support a long-or-cash strategy after transaction costs and slippage?
 
 ## Instruments and Data
 
@@ -17,16 +17,18 @@ Can selected machine learning models predict the next five-minute price directio
 
 ## Models
 
-1. Naive forecasting baseline
-2. Logistic Regression
-3. XGBoost
-4. Long Short-Term Memory (LSTM)
+1. Majority-class baseline
+2. Direction-persistence time-series baseline
+3. Logistic Regression
+4. XGBoost
+5. Long Short-Term Memory (LSTM)
 
 ## Methodology
 
 - Data cleaning and feature engineering
 - Expanding-window walk-forward validation
 - Out-of-sample predictive evaluation
+- Signal after completed bar; hypothetical entry at the next bar open and exit at that bar close
 - Long-or-cash trading strategy
 - Backtesting with transaction costs and slippage
 
@@ -47,10 +49,16 @@ Financial metrics:
 
 - notebooks/: Data analysis and model experiments
 - python_code/: Reusable Python functions
-- data/: Dataset documentation
+- data/: Dataset notes; the local CSV and Parquet data files are excluded from Git
 - results/: Charts and evaluation results
 - docs/: Research documentation and methodology notes
 
+## Reproducing the analysis
+
+Use Python 3.13 and install the packages in `requirements.txt`. Keep the cleaned input files `QQQ_clean_5min.parquet` and `SPY_clean_5min.parquet` in `data/`; they are not included in Git. See `data/README.md` for the data note.
+
+From the project root, run `python python_code/run_advanced_models.py`, then `python python_code/run_backtest.py`, and `python python_code/run_indicator_ablation.py`. The model runner keeps XGBoost and PyTorch work in a separate process from notebook kernels.
+
 ## Project Status
 
-Data preparation, leakage-aware feature engineering, five-fold expanding-window model comparisons, an initial long-or-cash cost-sensitivity backtest, and a matched technical-indicator ablation are complete. The indicator set did not consistently improve predictive metrics, and the strategy remains highly sensitive to costs. Remaining analysis work includes reviewing execution assumptions and running robustness checks.
+The analysis now uses a next-bar-open entry assumption: after the current five-minute bar closes, each signal is evaluated on the following bar's open-to-close direction. It compares the training-majority baseline, direction-persistence baseline, Logistic Regression, XGBoost and LSTM. The refreshed backtest remains highly sensitive to the illustrative per-side cost scenarios. Robustness checks, a final business interpretation, and the report remain to be completed.

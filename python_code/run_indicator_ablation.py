@@ -24,7 +24,10 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 RESULTS = ROOT / "results"
 TICKERS = ("QQQ", "SPY")
-MODEL_NAMES = ("Majority baseline", "Logistic regression", "XGBoost", "LSTM")
+MODEL_NAMES = (
+    "Majority baseline", "Direction persistence baseline",
+    "Logistic regression", "XGBoost", "LSTM",
+)
 METRICS = ("accuracy", "balanced_accuracy", "f1_up", "roc_auc")
 
 
@@ -107,7 +110,10 @@ def main() -> None:
             )
 
         left, right = (outputs[name] for name in feature_sets)
-        identity = ["datetime", "next_datetime", "actual", "next_return"]
+        identity = [
+            "datetime", "signal_datetime", "next_datetime", "next_open", "next_close",
+            "actual", "next_return",
+        ]
         if not left[identity].reset_index(drop=True).equals(
             right[identity].reset_index(drop=True)
         ):

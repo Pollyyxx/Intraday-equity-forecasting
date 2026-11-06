@@ -54,7 +54,10 @@ def main() -> None:
     all_metrics = pd.concat(metric_frames, ignore_index=True)
     all_predictions = pd.concat(prediction_frames, ignore_index=True)
 
-    required_models = {"Majority baseline", "Logistic regression", "XGBoost", "LSTM"}
+    required_models = {
+        "Majority baseline", "Direction persistence baseline",
+        "Logistic regression", "XGBoost", "LSTM",
+    }
     for ticker in ("QQQ", "SPY"):
         ticker_metrics = all_metrics.loc[all_metrics["ETF"] == ticker]
         if set(ticker_metrics["model"]) != required_models:

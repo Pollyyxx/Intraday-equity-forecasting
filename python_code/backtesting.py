@@ -8,6 +8,7 @@ import pandas as pd
 
 MODEL_PREDICTION_COLUMNS = {
     "Majority baseline": "baseline_prediction",
+    "Direction persistence baseline": "persistence_prediction",
     "Logistic regression": "logistic_prediction",
     "XGBoost": "xgboost_prediction",
     "LSTM": "lstm_prediction",
@@ -46,15 +47,16 @@ def backtest_long_or_cash(
     predictions: pd.DataFrame,
     cost_bps_per_side=(0.0, 1.0, 2.5, 5.0, 10.0),
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Evaluate one-bar long-or-cash positions with explicit per-side costs.
+    """Evaluate long-or-cash positions entered at the next bar's open.
 
-    Each prediction sets the position for the following close-to-close return.
-    Costs apply when the position changes at a signal timestamp. Any position
-    with no immediately following scored timestamp is closed at the end of its
-    target interval, including session ends and data/sequence gaps.
+    A signal is calculated after the current bar is complete, then held through
+    the next bar from open to close. Costs apply when positions change. A final
+    position is closed after its target bar, including at session or data gaps.
     """
     required = {
-        "ETF", "datetime", "next_datetime", "next_return", "actual",
+        "ETF", "datetime", "signal_datetime", "next_datetime",
+        "entry_datetime", "exit_datetime", "next_open", "next_close",
+        "next_return", "actual",
         *MODEL_PREDICTION_COLUMNS.values(),
     }
     missing = required.difference(predictions.columns)
@@ -65,17 +67,33 @@ def backtest_long_or_cash(
 
     data = predictions.copy()
     data["datetime"] = pd.to_datetime(data["datetime"], errors="raise")
-    data["next_datetime"] = pd.to_datetime(data["next_datetime"], errors="raise")
+    for column in ("signal_datetime", "next_datetime", "entry_datetime", "exit_datetime"):
+        data[column] = pd.to_datetime(data[column], errors="raise")
     data["next_return"] = pd.to_numeric(data["next_return"], errors="raise")
+    data["next_open"] = pd.to_numeric(data["next_open"], errors="raise")
+    data["next_close"] = pd.to_numeric(data["next_close"], errors="raise")
     data = data.sort_values(["ETF", "datetime"], kind="stable").reset_index(drop=True)
     if data.duplicated(["ETF", "datetime"]).any():
         raise ValueError("Each ETF must have at most one prediction per timestamp")
-    if not np.isfinite(data["next_return"]).all() or (data["next_return"] <= -1).any():
-        raise ValueError("next_return must be finite and greater than -100%")
+    if not np.isfinite(data[["next_open", "next_close", "next_return"]].to_numpy()).all():
+        raise ValueError("Target-bar prices and returns must be finite")
+    if (data["next_open"] <= 0).any() or (data["next_close"] <= 0).any():
+        raise ValueError("Target-bar prices must be positive")
+    if (data["next_return"] <= -1).any():
+        raise ValueError("next_return must be greater than -100%")
+    calculated_return = data["next_close"].div(data["next_open"]) - 1
+    if not np.allclose(calculated_return, data["next_return"], rtol=0, atol=1e-12):
+        raise AssertionError("next_return must equal next-bar close divided by next-bar open")
     if not np.array_equal((data["next_return"] > 0).astype(int), data["actual"].astype(int)):
         raise AssertionError("Saved direction labels do not match realized next-bar returns")
-    if not (data["next_datetime"] - data["datetime"]).eq(pd.Timedelta(minutes=5)).all():
-        raise AssertionError("Backtest targets must end at the next five-minute timestamp")
+    if not (data["signal_datetime"] - data["datetime"]).eq(pd.Timedelta(minutes=5)).all():
+        raise AssertionError("Signals must be available at the current bar close")
+    if not (data["next_datetime"] - data["signal_datetime"]).eq(pd.Timedelta(0)).all():
+        raise AssertionError("The next bar must begin when the current bar closes")
+    if not data["entry_datetime"].eq(data["next_datetime"]).all():
+        raise AssertionError("Trades must enter at the next bar open")
+    if not (data["exit_datetime"] - data["entry_datetime"]).eq(pd.Timedelta(minutes=5)).all():
+        raise AssertionError("Trades must exit at the close of the five-minute target bar")
     if not (data["datetime"].dt.date == data["next_datetime"].dt.date).all():
         raise AssertionError("Backtest targets must not cross session dates")
 
@@ -90,6 +108,8 @@ def backtest_long_or_cash(
                 raise ValueError(f"{ticker}/{model_name} predictions must be binary")
 
             position_by_time = dict(zip(ticker_data["datetime"], positions))
+            # Keep the prior signal's position through its target bar. If that
+            # bar has no next scored signal, the position is closed at the bar end.
             preceding_position = ticker_data["datetime"].map(
                 dict(zip(ticker_data["next_datetime"], positions))
             ).fillna(0).astype(int)
@@ -110,7 +130,12 @@ def backtest_long_or_cash(
                     "ETF": ticker,
                     "model": model_name,
                     "datetime": ticker_data["datetime"].to_numpy(),
+                    "signal_datetime": ticker_data["signal_datetime"].to_numpy(),
                     "next_datetime": ticker_data["next_datetime"].to_numpy(),
+                    "entry_datetime": ticker_data["entry_datetime"].to_numpy(),
+                    "exit_datetime": ticker_data["exit_datetime"].to_numpy(),
+                    "entry_price": ticker_data["next_open"].to_numpy(),
+                    "exit_price": ticker_data["next_close"].to_numpy(),
                     "session_date": session_dates.to_numpy(),
                     "position": positions.to_numpy(),
                     "asset_return": ticker_data["next_return"].to_numpy(),
@@ -121,6 +146,8 @@ def backtest_long_or_cash(
                     "entry_cost": entry_cost,
                     "exit_cost": exit_cost,
                 })
+                # The two one-way fees are applied at entry and exit around the
+                # next-bar open-to-close return.
                 intervals["net_return"] = (
                     (1 - intervals["entry_cost"])
                     * (1 + intervals["gross_return"])

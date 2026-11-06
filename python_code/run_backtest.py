@@ -18,7 +18,7 @@ def main() -> None:
     prediction_path = RESULTS_DIR / "advanced_model_predictions.csv"
     predictions = pd.read_csv(
         prediction_path,
-        parse_dates=["datetime", "next_datetime"],
+        parse_dates=["datetime", "signal_datetime", "next_datetime", "entry_datetime", "exit_datetime"],
     )
     summaries, daily_returns = backtest_long_or_cash(
         predictions,
@@ -26,7 +26,8 @@ def main() -> None:
     )
 
     expected_models = {
-        "Majority baseline", "Logistic regression", "XGBoost", "LSTM"
+        "Majority baseline", "Direction persistence baseline",
+        "Logistic regression", "XGBoost", "LSTM"
     }
     expected_costs = set(COST_SCENARIOS_BPS_PER_SIDE)
     for ticker in ("QQQ", "SPY"):
@@ -37,7 +38,7 @@ def main() -> None:
             raise AssertionError(f"{ticker}: missing transaction-cost scenarios")
     if summaries.duplicated(["ETF", "model", "cost_bps_per_side"]).any():
         raise AssertionError("Duplicate strategy/scenario summary rows")
-    if len(summaries) != 2 * 4 * len(COST_SCENARIOS_BPS_PER_SIDE):
+    if len(summaries) != 2 * 5 * len(COST_SCENARIOS_BPS_PER_SIDE):
         raise AssertionError("Unexpected number of ETF/model/cost-scenario summaries")
     if not (summaries["entries"] == summaries["exits"]).all():
         raise AssertionError("Every long entry must be matched by a session/gap exit")

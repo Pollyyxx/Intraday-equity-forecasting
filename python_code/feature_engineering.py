@@ -27,7 +27,11 @@ INDICATOR_FEATURE_COLUMNS = (
     "bollinger_bandwidth_20",
     "distance_from_session_vwap",
 )
-TARGET_COLUMNS = ("next_datetime", "next_close", "next_return", "target")
+BAR_MINUTES = 5
+TARGET_COLUMNS = (
+    "signal_datetime", "next_datetime", "next_open", "next_close",
+    "next_return", "target",
+)
 
 
 def _validated_bars(df: pd.DataFrame) -> pd.DataFrame:
@@ -79,17 +83,26 @@ def select_scheduled_bars(
 
 
 def add_next_bar_target(df: pd.DataFrame) -> pd.DataFrame:
-    """Add the next observed five-minute close direction within the same date."""
+    """Predict the next bar's open-to-close direction within the same session.
+
+    Predictors are calculated after the current bar is complete. Using the next
+    bar's open as entry avoids assuming we can trade at the just-observed close.
+    """
     data = _validated_bars(df)
     next_datetime = data["datetime"].shift(-1)
+    next_open = data["Open"].shift(-1)
     next_close = data["Close"].shift(-1)
     same_date = data["datetime"].dt.date == next_datetime.dt.date
     consecutive = next_datetime.sub(data["datetime"]).eq(pd.Timedelta(minutes=5))
     valid = same_date & consecutive
 
-    data["next_datetime"] = next_datetime
-    data["next_close"] = next_close
-    data["next_return"] = (next_close.div(data["Close"]) - 1).where(valid)
+    data["signal_datetime"] = data["datetime"] + pd.Timedelta(minutes=BAR_MINUTES)
+    data["next_datetime"] = next_datetime.where(valid)
+    data["next_open"] = next_open.where(valid)
+    data["next_close"] = next_close.where(valid)
+    # This return begins after the signal: enter at the next bar's open, then
+    # hold through that bar until its close.
+    data["next_return"] = (next_close.div(next_open) - 1).where(valid)
     data["target"] = (data["next_return"] > 0).where(valid).astype("Int64")
     return data
 
@@ -100,6 +113,7 @@ def add_predictors(df: pd.DataFrame) -> pd.DataFrame:
     data["_session_date"] = data["datetime"].dt.date
     groups = data.groupby("_session_date", sort=False)
 
+    # A lag is kept only when every intervening five-minute bar is present.
     for lag, name in ((1, "return_1_bar"), (3, "return_3_bars"), (6, "return_6_bars")):
         previous_close = groups["Close"].shift(lag)
         previous_datetime = groups["datetime"].shift(lag)
@@ -108,6 +122,7 @@ def add_predictors(df: pd.DataFrame) -> pd.DataFrame:
         )
         data[name] = (data["Close"].div(previous_close) - 1).where(exact_lookback)
 
+    # A rolling standard deviation gives a simple measure of recent movement.
     data["realized_volatility_12_bars"] = data.groupby(
         "_session_date", sort=False
     )["return_1_bar"].transform(
@@ -126,7 +141,10 @@ def add_predictors(df: pd.DataFrame) -> pd.DataFrame:
         data["log_volume"].sub(previous_log_volume).where(consecutive)
     )
 
-    minutes = data["datetime"].dt.hour.mul(60).add(data["datetime"].dt.minute).sub(570)
+    # The signal is available when this bar closes, five minutes after its start.
+    signal_time = data["datetime"] + pd.Timedelta(minutes=BAR_MINUTES)
+    minutes = signal_time.dt.hour.mul(60).add(signal_time.dt.minute).sub(570)
+    # Sine and cosine let the model represent time-of-day as a repeating cycle.
     angle = 2 * np.pi * minutes / 390
     data["minutes_since_open"] = minutes.astype(int)
     data["time_of_day_sin"] = np.sin(angle)
@@ -154,6 +172,7 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     segment_keys = ["_session_date", "_segment_id"]
     segments = data.groupby(segment_keys, sort=False)
 
+    # Standard 12/26/9 MACD settings are kept fixed for this comparison.
     ema_fast = segments["Close"].transform(
         lambda values: values.ewm(span=12, adjust=False, min_periods=12).mean()
     )
@@ -169,6 +188,7 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     data["macd_line_pct"] = macd_line.div(data["Close"])
     data["macd_histogram_pct"] = macd_line.sub(macd_signal).div(data["Close"])
 
+    # RSI compares smoothed gains with smoothed losses over 14 bars.
     change = segments["Close"].diff()
     gains = change.clip(lower=0)
     losses = -change.clip(upper=0)
@@ -188,6 +208,7 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     rsi = rsi.mask(average_loss.eq(0) & average_gain.gt(0), 100)
     data["rsi_14"] = rsi
 
+    # Bandwidth measures the recent price spread relative to its rolling average.
     rolling_middle = segments["Close"].transform(
         lambda values: values.rolling(window=20, min_periods=20).mean()
     )
@@ -196,6 +217,7 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     )
     data["bollinger_bandwidth_20"] = rolling_std.mul(4).div(rolling_middle)
 
+    # Session VWAP starts fresh each morning and uses only the volume in this source.
     typical_price = data[["High", "Low", "Close"]].mean(axis=1)
     cumulative_volume = data.groupby("_session_date", sort=False)["Volume"].cumsum()
     cumulative_price_volume = (typical_price * data["Volume"]).groupby(

@@ -41,8 +41,8 @@ def evaluate_expanding_window(
     n_splits=5,
     initial_train_fraction=0.60,
 ):
-    """Compare train-majority and logistic-regression predictions out of sample."""
-    required = {"datetime", "target", *feature_columns}
+    """Compare majority, direction-persistence, and logistic-regression predictions out of sample."""
+    required = {"datetime", "target", "return_1_bar", *feature_columns}
     missing = required.difference(frame.columns)
     if missing:
         raise ValueError(f"Missing model columns: {sorted(missing)}")
@@ -79,6 +79,9 @@ def evaluate_expanding_window(
         y_test = test["target"].astype(int)
         majority_class = int(y_train.mode().iloc[0])
         baseline_prediction = np.full(len(test), majority_class, dtype=int)
+        # This is a small time-series idea: use the last completed direction as
+        # the forecast for the next bar. It is different from the training majority.
+        persistence_prediction = (test["return_1_bar"].to_numpy() > 0).astype(int)
 
         # Scaling is fit only on this fold's training rows.
         classifier = make_pipeline(
@@ -100,6 +103,7 @@ def evaluate_expanding_window(
         }
         for model_name, prediction in [
             ("Majority baseline", baseline_prediction),
+            ("Direction persistence baseline", persistence_prediction),
             ("Logistic regression", logistic_prediction),
         ]:
             metric_rows.append({
@@ -117,9 +121,12 @@ def evaluate_expanding_window(
 
         prediction_parts.append(pd.DataFrame({
             "datetime": test["datetime"].to_numpy(),
+            "signal_datetime": test["signal_datetime"].to_numpy(),
+            "next_datetime": test["next_datetime"].to_numpy(),
             "session_date": test["session_date"].to_numpy(),
             "actual": y_test.to_numpy(),
             "baseline_prediction": baseline_prediction,
+            "persistence_prediction": persistence_prediction,
             "logistic_prediction": logistic_prediction,
             "logistic_probability_up": logistic_probability,
         }))

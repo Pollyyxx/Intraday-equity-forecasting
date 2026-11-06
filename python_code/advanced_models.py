@@ -20,6 +20,7 @@ from model_evaluation import expanding_date_splits
 
 class _SequenceClassifier(nn.Module):
     def __init__(self, input_size: int, hidden_size: int = 16):
+        # Keep this one-layer network small so it is easy to compare and inspect.
         super().__init__()
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, batch_first=True)
         self.output = nn.Linear(hidden_size, 1)
@@ -103,9 +104,9 @@ def evaluate_xgb_lstm(
     lstm_epochs=8,
     random_state=42,
 ):
-    """Evaluate baseline, logistic, XGBoost, and LSTM on shared test timestamps."""
+    """Evaluate two simple baselines, logistic regression, XGBoost, and LSTM on shared timestamps."""
     feature_columns = list(feature_columns)
-    required = {"datetime", "target", *feature_columns}
+    required = {"datetime", "target", "return_1_bar", *feature_columns}
     missing = required.difference(frame.columns)
     if missing:
         raise ValueError(f"Missing model columns: {sorted(missing)}")
@@ -161,12 +162,16 @@ def evaluate_xgb_lstm(
         common_test_scaled = scaler.transform(common_test[feature_columns]).astype(np.float32)
         majority_class = int(train["target"].mode().iloc[0])
         baseline_pred = np.full(len(common_test), majority_class, dtype=int)
+        # This benchmark carries the latest completed close-to-close direction forward.
+        persistence_pred = (common_test["return_1_bar"].to_numpy() > 0).astype(int)
 
         logistic = LogisticRegression(max_iter=1000, solver="lbfgs")
         logistic.fit(x_train_scaled, y_train)
         logistic_pred = logistic.predict(common_test_scaled).astype(int)
         logistic_prob = logistic.predict_proba(common_test_scaled)[:, 1]
 
+        # These modest settings stay fixed; the test folds are for evaluation,
+        # not for searching for the best tree configuration.
         xgb = XGBClassifier(
             n_estimators=200,
             max_depth=3,
@@ -183,6 +188,7 @@ def evaluate_xgb_lstm(
         xgb_pred = xgb.predict(common_test[feature_columns]).astype(int)
         xgb_prob = xgb.predict_proba(common_test[feature_columns])[:, 1]
 
+        # The same fixed epoch count is used in each fold for a fair comparison.
         lstm_pred, lstm_prob = _fit_lstm(
             x_train_seq,
             y_train_seq,
@@ -195,13 +201,14 @@ def evaluate_xgb_lstm(
 
         fold_models = [
             ("Majority baseline", baseline_pred, None),
+            ("Direction persistence baseline", persistence_pred, None),
             ("Logistic regression", logistic_pred, logistic_prob),
             ("XGBoost", xgb_pred, xgb_prob),
             ("LSTM", lstm_pred, lstm_prob),
         ]
         for name, prediction, probability in fold_models:
             scores = _score(y_test, prediction, probability if probability is not None else np.full(len(y_test), majority_class, dtype=float))
-            if name == "Majority baseline":
+            if name in {"Majority baseline", "Direction persistence baseline"}:
                 scores["roc_auc"] = np.nan
             metrics.append({
                 "fold": fold,
@@ -216,10 +223,16 @@ def evaluate_xgb_lstm(
             })
         predictions.append(pd.DataFrame({
             "datetime": common_test["datetime"],
+            "signal_datetime": common_test["signal_datetime"],
             "next_datetime": common_test["next_datetime"],
+            "entry_datetime": common_test["next_datetime"],
+            "exit_datetime": common_test["next_datetime"] + pd.Timedelta(minutes=5),
+            "next_open": common_test["next_open"].astype(float).to_numpy(),
+            "next_close": common_test["next_close"].astype(float).to_numpy(),
             "next_return": common_test["next_return"].astype(float).to_numpy(),
             "actual": y_test,
             "baseline_prediction": baseline_pred,
+            "persistence_prediction": persistence_pred,
             "logistic_prediction": logistic_pred,
             "xgboost_prediction": xgb_pred,
             "xgboost_probability_up": xgb_prob,
