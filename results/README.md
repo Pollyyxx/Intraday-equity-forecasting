@@ -10,9 +10,12 @@ This folder contains saved model evaluation and backtest outputs. The current ta
 - `indicator_ablation_deltas.csv`: augmented-minus-base mean-fold metric differences.
 - `indicator_ablation_predictions.csv`: paired, shared-timestamp predictions for both feature sets.
 - `indicator_ablation_backtest_summary.csv` and `indicator_ablation_backtest_daily_returns.csv`: matched long-or-cash results for both feature sets across the existing per-side cost scenarios.
+- `robustness_fold_metrics.csv`: model metrics for each of the five existing chronological test folds.
+- `robustness_backtest_by_fold.csv` and `robustness_backtest_daily_by_fold.csv`: per-fold strategy summaries and daily returns. Each fold starts and ends flat; fold returns are not compounded together.
+- `robustness_backtest_stability.csv`: mean, median, range and positive-fold count for each model and cost scenario.
 
 To recompute the model comparison, including majority and direction-persistence baselines, run `python_code/run_advanced_models.py` from the project root. The notebook reads the saved outputs by default and does not retrain models when they are already present.
 
-To recompute the long-or-cash results from saved predictions, run `python_code/run_backtest.py`. Cost scenarios are illustrative all-in transaction-cost and slippage rates per side, not broker-specific estimates.
+To recompute the long-or-cash results from saved predictions, run `python_code/run_backtest.py`. Cost scenarios are illustrative all-in transaction-cost and slippage rates per side, not broker-specific estimates. Fold results are a stability check on periods already reviewed, not a new untouched final test.
 
 To recompute the indicator ablation, run `python_code/run_indicator_ablation.py` in the project environment. It leaves the original baseline model and backtest outputs unchanged.

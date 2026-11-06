@@ -12,4 +12,4 @@
 
 ## Planned notebooks
 
-- None currently. The independent final-period evaluation, if required, must use data collected after the modelling choices are fixed.
+- None currently. The available local history ends on 16 October 2026; the existing folds are used for walk-forward evaluation and are not described as an untouched post-selection test.

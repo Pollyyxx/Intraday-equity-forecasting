@@ -6,7 +6,7 @@ This project investigates whether machine learning models can predict short-term
 
 ## Research Question
 
-Can selected models predict the next five-minute bar’s open-to-close direction for SPY and QQQ, and can those predictions support a long-or-cash strategy after transaction costs and slippage?
+Can selected models predict the next five-minute bar’s open-to-close direction for SPY and QQQ, and how does a long-or-cash strategy perform under explicit transaction-cost and slippage scenarios?
 
 ## Instruments and Data
 
@@ -61,4 +61,4 @@ From the project root, run `python python_code/run_advanced_models.py`, then `py
 
 ## Project Status
 
-The analysis now uses a next-bar-open entry assumption: after the current five-minute bar closes, each signal is evaluated on the following bar's open-to-close direction. It compares the training-majority baseline, direction-persistence baseline, Logistic Regression, XGBoost and LSTM. The refreshed backtest remains highly sensitive to the illustrative per-side cost scenarios. Fold-by-fold robustness outputs are available in `results/robustness_*.csv` and reviewed in `notebooks/07_robustness_checks.ipynb`. These are stability checks on folds already used for model review, not an untouched final test. A final business interpretation and the student-written report remain to be completed.
+The five-year data currently available runs from 7 March 2022 to 16 October 2026; there are no later downloaded dates. The first data notebook retains preliminary close-to-close EDA and a single 80/20 baseline, while the final model comparison uses a next-bar-open entry assumption: after the current five-minute bar closes, each signal is evaluated on the following bar's open-to-close direction. It compares the training-majority baseline, direction-persistence baseline, Logistic Regression, XGBoost and LSTM. The refreshed backtest remains highly sensitive to the illustrative per-side cost scenarios. Fold-by-fold robustness outputs are available in `results/robustness_*.csv` and reviewed in `notebooks/07_robustness_checks.ipynb`. These are stability checks on folds already used for model review, not an untouched final test. The next step is to interpret the evidence and confirm the final analysis scope before you write the report.
