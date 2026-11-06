@@ -21,3 +21,7 @@ To recompute the model comparison, including majority and direction-persistence 
 To recompute the long-or-cash results from saved predictions, run `python_code/run_backtest.py`. Cost scenarios are illustrative all-in transaction-cost and slippage rates per side, not broker-specific estimates. Fold results are a stability check on periods already reviewed, not a new untouched final test.
 
 To recompute the indicator ablation, run `python_code/run_indicator_ablation.py` in the project environment. It leaves the original baseline model and backtest outputs unchanged. Notebook 08 joins the saved results for review; it does not retrain models or tune settings.
+
+## Cost evidence
+
+The input files contain five-minute OHLCV bars, not bid/ask or NBBO quotes, order sizes, routes, broker fee schedules or actual fills. The backtest's next-open/next-close fills and 0, 1, 2.5, 5 and 10 basis-point per-side values are therefore an execution assumption and sensitivity grid, not measured trading costs. The 0 bp row is a gross reference. Regulatory fee schedules change over time and do not determine spread or slippage; see the cost evidence review in `docs/methodology_and_next_steps.md` for the official SEC and FINRA references.

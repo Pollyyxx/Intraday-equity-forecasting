@@ -133,3 +133,11 @@ These tasks were written before the target and execution timing were corrected. 
 
 - Added one-way turnover to the compact model-and-strategy comparison table and saved CSV so the trading activity can be reviewed alongside cost-sensitive returns.
 - Added a grouped entries-per-session chart for the existing out-of-sample signals. The chart uses one cost row because cost assumptions do not change the saved positions.
+
+
+## 6 November 2026 — Transaction-cost evidence review
+
+- Checked the local cleaned Parquet files: they contain timestamp, OHLCV and source fields, but no bid/ask quotes, NBBO, quote depth, order size, broker route, broker fee schedule or actual execution records.
+- Confirmed the backtest applies a basis-point cost at position entry and exit. The zero-cost row is a gross reference; the 1, 2.5, 5 and 10 bp-per-side rows remain sensitivity assumptions.
+- Reviewed the SEC Section 31 fee explanation and FY2026 rate advisory, FINRA's TAF guidance for ETFs, and the SEC Rule 605 execution-quality material. Those sources show that fees vary by date and transaction context, while spread and execution quality require quote/order information absent from these inputs.
+- Kept the cost grid unchanged and documented what evidence would be needed to calibrate it. No claim is made that any scenario matches a specific broker or venue.

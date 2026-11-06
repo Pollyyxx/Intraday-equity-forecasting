@@ -30,6 +30,13 @@ The analysis asks whether short-horizon directional signals would merit further 
 - The saved expanding folds are walk-forward evaluation periods, but their results have already been reviewed during model decisions. They are not an untouched post-selection test.
 - Cleaned input data files are excluded from Git. Check the provider's licence before sharing data; retain the source files separately for reproducibility.
 
+## Cost evidence review — 6 November 2026
+
+The cleaned input files contain `datetime`, OHLCV and a source label. They do not contain bid/ask quotes, NBBO, quote depth, order size, broker route, broker fee schedule or actual fill records. The backtest assumes entry at the next bar open and exit at its close, then applies the selected basis-point rate separately when the long-or-cash position changes. The 0 bp case is a gross reference; 1, 2.5, 5 and 10 bp-per-side cases are sensitivity scenarios, not observed costs.
+
+The official fee rules provide context but do not calibrate those all-in scenarios. The SEC FY2026 advisory sets a rate of $20.60 per million dollars for covered sales from 4 April 2026; Section 31 rates can change, and the SEC explains that SROs pay the SEC while broker-dealer pass-through charges depend on SRO and firm procedures. FINRA guidance says ETFs are covered by its transaction-based member fee, with details in its schedule. These date- and transaction-specific charges do not measure spread or slippage and cannot be applied as one uniform customer cost across the full 2022–2026 sample. See the [SEC FY2026 fee advisory](https://www.sec.gov/rules-regulations/fee-rate-advisories/2026-2), [SEC Section 31 fee explanation](https://www.sec.gov/rules-regulations/fee-rate-advisories/section-31-transaction-fees-basic-information-firms), and [FINRA Trading Activity Fee FAQ](https://www.finra.org/rules-guidance/guidance/faqs/trading-activity-fee).
+
+Decision: leave the current cost grid unchanged and label every non-zero rate illustrative. A calibrated execution-cost estimate would need timestamped quote data near each order, an order-size assumption, a specified venue or routing rule, and the relevant broker fee schedule. Quote-based execution measures such as effective spread use quote benchmarks around order receipt; see the [SEC Rule 605 execution-quality FAQ](https://www.sec.gov/rules-regulations/staff-guidance/trading-markets-frequently-asked-questions/frequently-asked-questions-rule-605-regulation-nms).
 ## Next analysis tasks
 
 1. Review model accuracy and AUC alongside the majority and persistence baselines, not in isolation.
