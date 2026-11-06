@@ -9,6 +9,7 @@
 - `05_long_or_cash_backtest.ipynb`: saved out-of-sample long-or-cash performance using next-bar-open entries and open-to-close returns, with per-side cost sensitivity.
 - `06_indicator_ablation.ipynb`: paired comparison of the base predictors with MACD, RSI, Bollinger bandwidth, and session VWAP distance, including matched cost-sensitivity results.
 - `07_robustness_checks.ipynb`: fold-by-fold predictive and strategy stability review using the existing out-of-sample predictions.
+- `08_results_review.ipynb`: joint review of model metrics, baseline deltas, cost-sensitive strategy results, indicator changes, and fold stability using saved outputs.
 
 ## Planned notebooks
 

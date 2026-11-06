@@ -110,3 +110,12 @@ These tasks were written before the target and execution timing were corrected. 
 - Compared the root backup notebook with the current data-availability notebook. The backup's only unique cell printed Python/package versions; it contained no unique analysis steps. Removed the duplicate backup from the project while retaining it in Git history.
 - Removed the preliminary single 80/20 majority-baseline section from notebook 01. It used close-to-close labels and duplicated the current baseline comparison. Kept the preliminary close-to-close EDA and clarified its boundary from the final open-to-close model target.
 - Updated the project structure and methodology notes so notebook 03 is the canonical model-baseline comparison.
+
+
+## 6 November 2026 — Joint model and strategy results review
+
+- Added `notebooks/08_results_review.ipynb` to read the saved model folds, backtest summaries, indicator deltas and robustness summaries together. It checks row/fold coverage, compares each model with the same-fold majority baseline, and joins predictive averages with the continuous-period strategy results at 0 and 1 bp per side.
+- Saved the joined summary to `results/model_strategy_comparison.csv`. The notebook uses existing outputs only; it does not fit models, tune hyperparameters or create dissertation conclusions.
+- In the saved full comparison, XGBoost had the highest mean accuracy among the five approaches for both QQQ (51.53%) and SPY (51.75%). At zero cost, its continuous-period net returns were 37.18% and 27.70%; at the illustrative 1 bp per-side scenario, they were -52.05% and -56.39%. All five model/benchmark strategies were negative at 1 bp per side for both ETFs.
+- The paired indicator results remain a separate matched-sample comparison. They are not directly compared with the full-sample model metrics. The accuracy/return chart shows two different evaluation measures and should be read alongside their separate assumptions.
+- Next: review fold consistency, drawdown, turnover and cost sensitivity, then confirm the final model/strategy scope and write the interpretation independently.
