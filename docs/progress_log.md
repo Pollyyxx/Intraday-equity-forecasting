@@ -96,10 +96,17 @@ These tasks were written before the target and execution timing were corrected. 
 
 ## Notes audit — current scope and next analysis
 
-- The first data-availability notebook contains preliminary close-to-close EDA labels and a single chronological 80/20 majority baseline. Those outputs are retained for EDA history; they are not the final forecasting target or final validation result.
+- The first data-availability notebook retains preliminary close-to-close EDA labels, which are not the final forecasting target. Its old single chronological 80/20 majority-baseline section has been removed because the canonical baseline comparison is in notebook 03.
 - Current model target and hypothetical execution are aligned: after a five-minute bar closes, the forecast is for the following bar's open-to-close direction; a long position enters at that next open and exits at its close.
 - The available dataset spans 7 March 2022 to 16 October 2026. No additional later dates are currently available. The five expanding chronological folds provide walk-forward evaluation, but have already been inspected during model review.
 - The analysis uses two ETFs at one five-minute frequency. The model comparison is majority and direction-persistence baselines, Logistic Regression, XGBoost and LSTM. The indicator work is a paired exploratory ablation, not an established improvement.
 - The source is IEX-based and should not be described as consolidated US-market volume. Missing bars are kept missing. The local cleaned Parquet files are excluded from Git, so a fresh clone needs the licensed input files to rerun preparation and model fitting.
 - Cost inputs of 0, 1, 2.5, 5 and 10 basis points per side are illustrative sensitivity scenarios. No broker-specific cost estimate has been established. Results are highly cost-sensitive and do not demonstrate live-trading profitability.
 - Next analysis: prepare a student-authored interpretation of predictive performance, fold variation, drawdown, turnover and cost sensitivity; connect the evidence to a cautious business decision; then confirm the final model and strategy scope. Do not write dissertation prose from these notes.
+
+
+## 6 November 2026 — Notebook structure cleanup
+
+- Compared the root backup notebook with the current data-availability notebook. The backup's only unique cell printed Python/package versions; it contained no unique analysis steps. Removed the duplicate backup from the project while retaining it in Git history.
+- Removed the preliminary single 80/20 majority-baseline section from notebook 01. It used close-to-close labels and duplicated the current baseline comparison. Kept the preliminary close-to-close EDA and clarified its boundary from the final open-to-close model target.
+- Updated the project structure and methodology notes so notebook 03 is the canonical model-baseline comparison.

@@ -12,7 +12,7 @@
 
 A forecast is formed after the current five-minute bar has completed. The target is the next bar's open-to-close return. A hypothetical long enters at the next bar's open and exits at its close. Features use current and earlier information only. Valid targets do not cross a missing five-minute interval or session boundary.
 
-The close-to-close labels and single 80/20 baseline in `01_data_availability_and_exploration.ipynb` are preliminary EDA and are not the final model target or comparison. The later model notebooks use the open-to-close target and five expanding chronological folds.
+The close-to-close labels in `01_data_availability_and_exploration.ipynb` are preliminary EDA and are not the final model target. The old single 80/20 majority baseline was removed from that notebook because it duplicated modelling and used the preliminary target. The canonical baseline comparison is in notebook 03; later model notebooks use the open-to-close target and five expanding chronological folds.
 
 ## Model comparison and scope
 
