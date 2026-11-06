@@ -20,7 +20,7 @@
 - Notebook 05: cost-sensitivity equity curves.
 - Notebook 06: matched indicator changes in accuracy and ROC-AUC.
 - Notebook 07: fold-by-fold strategy returns.
-- Notebook 08: signal accuracy compared with trading returns at execution.
+- Notebook 08: entries per session and signal accuracy compared with trading returns at execution.
 
 ## Planned notebooks
 

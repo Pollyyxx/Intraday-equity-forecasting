@@ -127,3 +127,9 @@ These tasks were written before the target and execution timing were corrected. 
 - Added short comments across notebook code cells and reusable Python modules to explain the main data, validation, modelling and backtest steps.
 - Added plots for session completeness, target balance, fold accuracy, model score variation and matched indicator changes. Existing cost, robustness and signal-to-execution plots remain in their relevant notebooks.
 - Checked that all notebook outputs are error-free and all Python modules parse. The edits in this review are explanatory and visual, apart from correcting an outdated validation error message in the advanced-model runner.
+
+
+## 6 November 2026 — Trading activity in the joint results review
+
+- Added one-way turnover to the compact model-and-strategy comparison table and saved CSV so the trading activity can be reviewed alongside cost-sensitive returns.
+- Added a grouped entries-per-session chart for the existing out-of-sample signals. The chart uses one cost row because cost assumptions do not change the saved positions.
