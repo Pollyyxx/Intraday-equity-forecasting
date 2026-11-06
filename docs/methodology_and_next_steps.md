@@ -1,6 +1,6 @@
 # Methodology decisions and next steps
 
-## Current study scope
+## Final scope lock — 6 November 2026
 
 - Instruments: SPY and QQQ.
 - Frequency: five-minute OHLCV bars.
@@ -16,7 +16,7 @@ The close-to-close labels in `01_data_availability_and_exploration.ipynb` are pr
 
 ## Model comparison and scope
 
-The primary comparison uses the training-window majority baseline and direction-persistence baseline, Logistic Regression, one tree model (XGBoost) and one recurrent model (LSTM). Random Forest, ARIMA and GRU are outside the current scope. This keeps the comparison focused on two simple benchmarks and three selected models. The models use shared test timestamps where required sequence history is available. Technical indicators are tested separately in a paired ablation on matched rows; that experiment did not show a consistent improvement. The direction-persistence benchmark uses only the latest completed close-to-close direction to forecast the next target interval.
+The primary comparison uses the training-window majority baseline and direction-persistence baseline, Logistic Regression, one tree model (XGBoost) and one recurrent model (LSTM). Random Forest, ARIMA and GRU are outside the current scope. This keeps the comparison focused on two simple benchmarks and three selected models. The models use shared test timestamps where required sequence history is available. Technical indicators are tested separately in a paired ablation on matched rows; that experiment did not show a consistent improvement. The direction-persistence benchmark uses only the latest completed close-to-close direction to forecast the next target interval. This is the frozen scope for final analysis and reporting: the indicator work remains a secondary paired ablation. No additional instruments, frequencies, core models, indicator sets or strategy variants will be added to the current analysis.
 
 ## Business decision focus
 
@@ -38,12 +38,11 @@ The official fee rules provide context but do not calibrate those all-in scenari
 
 Decision: leave the current cost grid unchanged and label every non-zero rate illustrative. A calibrated execution-cost estimate would need timestamped quote data near each order, an order-size assumption, a specified venue or routing rule, and the relevant broker fee schedule. Quote-based execution measures such as effective spread use quote benchmarks around order receipt; see the [SEC Rule 605 execution-quality FAQ](https://www.sec.gov/rules-regulations/staff-guidance/trading-markets-frequently-asked-questions/frequently-asked-questions-rule-605-regulation-nms).
 
-## Remaining work after the evidence review
+## Remaining work after the scope lock
 
-1. Confirm that the current scope is final: SPY and QQQ at five-minute frequency, two simple baselines, Logistic Regression, XGBoost and LSTM, with the indicator experiment kept secondary.
-2. The student writes the report in their own words, using the evidence map to connect predictive results, trading outcomes, business context and limitations. Select only the figures needed to support those points.
-3. Confirm how the examiner can access or understand the licensed input data; the cleaned Parquet files are not in Git.
-4. Keep the separate project activity record and complete the required submission declarations.
+1. The student writes the report in their own words, using the evidence map to connect predictive results, trading outcomes, business context and limitations. Select only the figures needed to support those points.
+2. Confirm how the examiner can access or understand the licensed input data; the cleaned Parquet files are not in Git.
+3. Keep the separate project activity record and complete the required submission declarations.
 
 Saved output values and interpretation prompts are collected in [the results evidence map](results_interpretation_guide.md).
 

@@ -148,3 +148,11 @@ These tasks were written before the target and execution timing were corrected. 
 - Compiled saved predictive metrics, continuous-period strategy results, fold-level stability and the matched indicator deltas in `docs/results_interpretation_guide.md`.
 - Recorded the key evaluation boundaries: five reviewed chronological folds, separate fold portfolios versus the continuous backtest, and illustrative transaction-cost scenarios.
 - Added figure pointers and questions for the student's own business interpretation; the guide is not dissertation prose.
+
+
+## 6 November 2026 — Final project scope lock
+
+- Froze the current study at SPY and QQQ five-minute bars, the next-bar open-to-close target, five reviewed chronological folds, two simple baselines, Logistic Regression, XGBoost and LSTM, and one long-or-cash strategy.
+- Kept MACD, RSI, Bollinger bandwidth and session VWAP distance in the separate matched ablation; no additional instruments, frequencies, core models, indicator families or strategy variants will be added to this analysis.
+- Retained the existing cost grid as illustrative and the reviewed folds as walk-forward evaluation, not an untouched final holdout.
+- Updated the project status: report writing, examiner data access, activity records and submission declarations remain.
