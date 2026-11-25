@@ -44,7 +44,7 @@ def main() -> None:
     if len(summaries) != 2 * 5 * len(COST_SCENARIOS_BPS_PER_SIDE):
         raise AssertionError("Unexpected number of ETF/model/cost-scenario summaries")
     if not (summaries["entries"] == summaries["exits"]).all():
-        raise AssertionError("Every long entry must be matched by a session/gap exit")
+        raise AssertionError("Every one-bar long trade must have a matching exit")
     zero_cost = summaries.loc[summaries["cost_bps_per_side"] == 0].set_index(["ETF", "model"])
     if not (zero_cost["net_cumulative_return"].sub(zero_cost["gross_cumulative_return"]).abs() < 1e-12).all():
         raise AssertionError("Zero-cost net returns must equal gross returns")

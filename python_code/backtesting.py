@@ -51,9 +51,8 @@ def backtest_long_or_cash(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Evaluate long-or-cash positions entered at the next bar's open.
 
-    A signal is calculated after the current bar is complete, then held through
-    the next bar from open to close. Costs apply when positions change. A final
-    position is closed after its target bar, including at session or data gaps.
+    Each positive forecast is a separate trade: enter at the next bar open and
+    exit at that bar close. Per-side costs apply to every entry and exit.
     """
     # Check the saved execution prices and timestamps before calculating returns.
     required = {
@@ -110,26 +109,17 @@ def backtest_long_or_cash(
             if not positions.isin([0, 1]).all():
                 raise ValueError(f"{ticker}/{model_name} predictions must be binary")
 
-            position_by_time = dict(zip(ticker_data["datetime"], positions))
-            # Keep the prior signal's position through its target bar. If that
-            # bar has no next scored signal, the position is closed at the bar end.
-            preceding_position = ticker_data["datetime"].map(
-                dict(zip(ticker_data["next_datetime"], positions))
-            ).fillna(0).astype(int)
-            next_position = ticker_data["next_datetime"].map(position_by_time)
-            has_next_score = next_position.notna()
-
-            # A change in position costs one side; the final open position is closed.
-            entry_turnover = (positions - preceding_position).abs()
-            forced_exit_turnover = positions.where(~has_next_score, 0)
-            turnover = entry_turnover + forced_exit_turnover
+            # Every positive signal opens and closes one separate bar trade.
+            entry_turnover = positions
+            exit_turnover = positions
+            turnover = entry_turnover + exit_turnover
             gross_strategy_return = positions.to_numpy() * ticker_data["next_return"].to_numpy()
 
             # Costs are an explicit scenario input, not a claim about actual brokerage fees.
             for cost_bps in cost_bps_per_side:
                 cost_fraction = float(cost_bps) / 10_000
                 entry_cost = entry_turnover.to_numpy() * cost_fraction
-                exit_cost = forced_exit_turnover.to_numpy() * cost_fraction
+                exit_cost = exit_turnover.to_numpy() * cost_fraction
                 intervals = pd.DataFrame({
                     "ETF": ticker,
                     "model": model_name,
@@ -145,13 +135,12 @@ def backtest_long_or_cash(
                     "asset_return": ticker_data["next_return"].to_numpy(),
                     "gross_return": gross_strategy_return,
                     "entry_turnover": entry_turnover.to_numpy(),
-                    "exit_turnover": forced_exit_turnover.to_numpy(),
+                    "exit_turnover": exit_turnover.to_numpy(),
                     "one_way_turnover": turnover.to_numpy(),
                     "entry_cost": entry_cost,
                     "exit_cost": exit_cost,
                 })
-                # The two one-way fees are applied at entry and exit around the
-                # next-bar open-to-close return.
+                # Apply one fee at entry and one at exit for each positive signal.
                 intervals["net_return"] = (
                     (1 - intervals["entry_cost"])
                     * (1 + intervals["gross_return"])
@@ -173,12 +162,12 @@ def backtest_long_or_cash(
                     "intervals": int(len(intervals)),
                     "active_intervals": int(positions.sum()),
                     "exposure_fraction": float(positions.mean()),
-                    "entries": int(((positions == 1) & (preceding_position == 0)).sum()),
-                    "exits": int(((positions == 0) & (preceding_position == 1)).sum() + forced_exit_turnover.sum()),
+                    "entries": int(positions.sum()),
+                    "exits": int(positions.sum()),
                     "trade_events": int(turnover.sum()),
                     "one_way_turnover": float(turnover.sum()),
                     "entries_per_session": float(
-                        ((positions == 1) & (preceding_position == 0)).sum() / session_dates.nunique()
+                        positions.sum() / session_dates.nunique()
                     ),
                     "cumulative_cost_fraction_uncompounded": float(
                         intervals["entry_cost"].sum() + intervals["exit_cost"].sum()

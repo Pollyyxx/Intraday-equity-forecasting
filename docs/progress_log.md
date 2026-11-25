@@ -156,3 +156,12 @@ These tasks were written before the target and execution timing were corrected. 
 - Kept MACD, RSI, Bollinger bandwidth and session VWAP distance in the separate matched ablation; no additional instruments, frequencies, core models, indicator families or strategy variants will be added to this analysis.
 - Retained the existing cost grid as illustrative and the reviewed folds as walk-forward evaluation, not an untouched final holdout.
 - Updated the project status: report writing, examiner data access, activity records and submission declarations remain.
+
+
+## 23 November 2026 — One-bar trade cost correction
+
+- Checked the backtest against the documented execution rule: each positive forecast enters at the next bar open and exits at that bar close.
+- The previous code charged costs only when consecutive predictions changed. Updated it to charge one per-side cost at entry and at exit for every positive one-bar trade.
+- Recalculated the saved long-or-cash, indicator-ablation, and fold-level backtest results from the saved predictions. Predictive model metrics were not refit.
+- Refreshed notebooks 05–08 and the result guide. At 1 bp per side, XGBoost net cumulative return is -92.96% for QQQ and -93.74% for SPY; both reach -100% at 5 bp per side. The 0 bp results are unchanged.
+- These are still hypothetical sensitivity results. The cost rates are illustrative, and the five folds have already been reviewed.

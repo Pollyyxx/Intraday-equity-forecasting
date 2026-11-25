@@ -56,10 +56,16 @@ Financial metrics:
 
 ## Reproducing the analysis
 
-Use Python 3.13 and install the packages in `requirements.txt`. Keep the cleaned input files `QQQ_clean_5min.parquet` and `SPY_clean_5min.parquet` in `data/`; they are not included in Git. See `data/DATA_NOTES.md` for the data note.
+Use Python 3.13 and install the packages in `requirements.txt`. Keep the cleaned input files `QQQ_clean_5min.parquet` and `SPY_clean_5min.parquet` in `data/`; they are not included in Git. See `data/README.md` for the data note.
 
 From the project root, run `python python_code/run_advanced_models.py`, then `python python_code/run_backtest.py`, `python python_code/run_indicator_ablation.py`, and `python python_code/run_robustness_checks.py`. The model runner keeps XGBoost and PyTorch work in a separate process from notebook kernels.
 
 ## Project Status
 
-The five-year data currently available runs from 7 March 2022 to 16 October 2026; there are no later downloaded dates. The first data notebook retains preliminary close-to-close EDA; the model comparison in notebook 03 uses the final open-to-close target and chronological folds. The model comparison uses a next-bar-open entry assumption: after the current five-minute bar closes, each signal is evaluated on the following bar's open-to-close direction. It compares the training-majority baseline, direction-persistence baseline, Logistic Regression, XGBoost and LSTM. The refreshed backtest remains highly sensitive to the illustrative per-side cost scenarios. Fold-by-fold robustness outputs are available in `results/robustness_*.csv` and reviewed in `notebooks/07_robustness_checks.ipynb`. These are stability checks on folds already used for model review, not an untouched final test. The saved results are brought together in `notebooks/08_results_review.ipynb`, including a signal-to-execution comparison of accuracy lift against cost-adjusted return; the notebook does not refit models. The analysis scope is now frozen. `docs/results_interpretation_guide.md` collects the saved results and questions for the student's own interpretation. Remaining work is to write the report independently, confirm how the examiner can access the licensed input data, and finish the project activity record and required declarations.
+- Data: SPY and QQQ five-minute bars from 7 March 2022 to 16 October 2026.
+- Models: majority and direction-persistence baselines, Logistic Regression, XGBoost, and LSTM.
+- Trading rule: each positive forecast is a separate trade from the next bar open to its close. Costs are charged at entry and exit.
+- Evaluation: five expanding chronological folds. These folds have already informed model review, so they are not an untouched final test.
+- Limits: costs are illustrative, and the source data does not include quotes or actual fills.
+- Results: notebooks 07 and 08 review fold stability, model scores, cost sensitivity, and the indicator ablation.
+- Remaining work: write the report independently, confirm examiner access to the licensed data, and complete the activity record and required declarations.
